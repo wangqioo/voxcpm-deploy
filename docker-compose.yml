@@ -1,0 +1,58 @@
+services:
+  voxcpm:
+    image: voxcpm:local
+    container_name: voxcpm
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /home/wq/apps/voxcpm/VoxCPM:/app:ro
+      - /home/wq/apps/voxcpm/venv/lib/python3.12/site-packages:/usr/local/lib/python3.12/dist-packages:ro
+      - /home/wq/models:/models
+      - /home/wq/apps/voxcpm/models:/models/voxcpm
+      - /home/wq/apps/voxcpm/entrypoint.sh:/entrypoint.sh:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - PORT=8808
+      - MODEL_DIR=/models/voxcpm/VoxCPM2
+      - HF_HOME=/models/hf_cache
+      - MODELSCOPE_CACHE=/models/modelscope_cache
+      - PYTHONUNBUFFERED=1
+      - TORCHDYNAMO_DISABLE=1
+      - TORCH_COMPILE_DISABLE=1
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+
+  voxcpm-lora:
+    image: voxcpm:local
+    container_name: voxcpm-lora
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /home/wq/apps/voxcpm/VoxCPM:/app:ro
+      - /home/wq/apps/voxcpm/venv/lib/python3.12/site-packages:/usr/local/lib/python3.12/dist-packages:ro
+      - /home/wq/models:/models
+      - /home/wq/apps/voxcpm/models:/models/voxcpm
+      - /home/wq/apps/voxcpm/lora_data:/lora_data
+      - /home/wq/apps/voxcpm/entrypoint_lora.sh:/entrypoint_lora.sh:ro
+      - /home/wq/apps/voxcpm/css_fix.py:/entrypoint_css_fix.py:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - LORA_PORT=8809
+      - MODEL_DIR=/models/voxcpm/VoxCPM2
+      - HF_HOME=/models/hf_cache
+      - MODELSCOPE_CACHE=/models/modelscope_cache
+      - PYTHONUNBUFFERED=1
+      - TORCHDYNAMO_DISABLE=1
+      - TORCH_COMPILE_DISABLE=1
+    entrypoint: ["/bin/bash", "/entrypoint_lora.sh"]
